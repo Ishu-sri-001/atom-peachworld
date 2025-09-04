@@ -7,6 +7,7 @@ import SectionThree from "@/components/home/Section3";
 import MidSection from "@/components/home/MidSection";
 import Header from "@/components/header";
 import Section4 from "@/components/home/Section4";
+import Section5 from "@/components/home/Section5";
 
 const Page = () => {
   return (
@@ -20,7 +21,8 @@ const Page = () => {
          </div>
          <MidSection />
         <SectionThree />
-        {/* <Section4 /> */}
+        <Section4 />
+        <Section5 />
      
     </div>
   );

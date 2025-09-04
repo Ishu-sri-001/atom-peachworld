@@ -34,6 +34,40 @@ function SphereModel({ modelPath, texturePath, sphereRef }) {
   );
 }
 
+  function AdditionalSphere({ position, scale, isTransparent, sphereRef, modelPath, texturePath }) {
+  const { nodes } = useGLTF(modelPath);
+  const texture = useTexture(texturePath);
+  const sphereMesh = nodes.BlackBall_mesh;
+
+    const materialProps = {
+  thickness: 0.25,            // gives depth to the glass
+  roughness: 0.05,            // smooth, almost glass-like
+  transmission: 1.0,          // full transparency
+  ior: 0.6,                   // realistic glass refraction
+  chromaticAberration: 1.0,  // subtle rainbow dispersion
+  backside: true,             // render both sides
+  anisotropy: 1.5,            // helps with light streaking
+  distortion: 0.6,            // small distortions for realism
+  distortionScale: 0.2,
+  temporalDistortion: 0.1,    // dynamic shimmering
+};
+
+  return (
+    <mesh
+      ref={sphereRef}
+      geometry={sphereMesh.geometry}
+      scale={scale}
+      position={position}
+    >
+      {isTransparent ? (
+        <MeshTransmissionMaterial {...materialProps} />
+      ) : (
+        <meshStandardMaterial map={texture} metalness={1.0} roughness={0.7} />
+      )}
+    </mesh>
+  );
+}
+
 function TransparentRingModel({
   modelPath,
   scale = [1.2, 0.7, 1.2],
@@ -64,14 +98,7 @@ function TransparentRingModel({
       scale={scale}
       position={position}
       rotation={rotation}
-      // material={MeshTransmissionMaterial}
     >
-      {/* <meshStandardMaterial
-        color="#ffffff"
-        transparent={true}
-        opacity={0.3}
-        side={THREE.DoubleSide}
-      /> */}
        <MeshTransmissionMaterial {...materialProps}/>
     </mesh>
   );
@@ -144,6 +171,12 @@ const ModelCanvas = () => {
   const ring2Ref = useRef();
   const sphereRef = useRef();
   const cubeRef = useRef();
+
+  const additionalSphere1Ref = useRef();
+  const additionalSphere2Ref = useRef();
+  const additionalSphere3Ref = useRef();
+  const additionalSphere4Ref = useRef();
+  const additionalSphere5Ref = useRef();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -238,14 +271,18 @@ const ModelCanvas = () => {
           z: 1,
           ease: 'none'
         }, '<')
+
+
         gsap.to(sphereRef.current.rotation, {
-  z: `+=${degToRad(360 * 5)}`, 
+  z: `+=${degToRad(360 * 20)}`, 
   ease: "none",
-  scrollTrigger: {
-    trigger: "#section-mid",
-    start: "40% 50%",
-    end: "bottom top",
+ scrollTrigger: {
+    trigger: "#section-two",
+    start: "top top",         
+    endTrigger: "#section-five", 
+    end: "bottom top ",
     scrub: true,
+    // markers: true
   },
 });
 
@@ -283,6 +320,13 @@ const ModelCanvas = () => {
       duration:2,
       ease:'none'
     }, '<' )
+    
+    .to(sphereRef.current.position, {
+      x: 0, 
+    y: -30, 
+    delay:0.5,
+    ease: "ease" 
+    })
 
       const tl4 = gsap.timeline({
       scrollTrigger: {
@@ -299,6 +343,103 @@ const ModelCanvas = () => {
       delay:1.5,
       ease:'none'
     })
+
+    
+    const tl5 =gsap.timeline({
+      scrollTrigger: {
+        trigger: '#section-four',
+        start: 'top top',
+        end: 'bottom top',
+        scrub:true,
+        pin:true,
+        // markers: true,
+      }
+    })
+
+    const additionalSpheres = [
+      additionalSphere1Ref,
+      additionalSphere2Ref,
+      additionalSphere3Ref,
+      additionalSphere4Ref,
+      additionalSphere5Ref
+    ];
+    
+    additionalSpheres.forEach(sphereRef => {
+      if (sphereRef.current) {
+        sphereRef.current.material.transparent = true;
+        sphereRef.current.material.opacity = 0;
+        sphereRef.current.scale.setScalar(0.0);
+      }
+    })
+
+    tl5.to(
+  sphereRef.current.position,
+        {
+    x: 0, 
+    y: 0, 
+    // delay:0.5,
+    ease: "ease" }  
+)
+    .to(sphereRef.current.scale, {
+      x: 3.3,
+      y:3.3,
+      z:3.3,
+      delay:0.5,
+      duration:2,
+    })
+
+    .to([
+      additionalSphere1Ref.current.material,
+      additionalSphere2Ref.current.material,
+      additionalSphere3Ref.current.material,
+      additionalSphere4Ref.current.material,
+      additionalSphere5Ref.current.material
+    ], {
+      opacity: 1,
+      duration: 0.5,
+      ease: "power2.out"
+    }, "<")
+    .to([
+      additionalSphere1Ref.current.scale,
+      additionalSphere2Ref.current.scale,
+      additionalSphere3Ref.current.scale,
+      additionalSphere4Ref.current.scale,
+      additionalSphere5Ref.current.scale
+    ], {
+      x: 0.8,
+      y: 0.8,
+      z: 0.8,
+      duration: 1.5,
+      ease: "none",
+      
+    }, "<")
+
+    .to([
+      additionalSphere1Ref.current.position,
+      additionalSphere2Ref.current.position,
+      additionalSphere3Ref.current.position,
+      additionalSphere4Ref.current.position,
+      additionalSphere5Ref.current.position
+    ] , {
+      y: 20,
+      delay:0.5,
+    })
+    .to (sphereRef.current.position, {
+      y:20,
+      // delay:0.5,
+    }, '<')
+
+
+    // gsap.to(sphereRef.current.position, {
+    //   y:20,
+    //   scrollTrigger: {
+    //     trigger: '#section-four',
+    //     start: 'top bottom',
+    //     end: 'bottom top',
+    //     // scrub:true,
+    //     markers: true,
+    //   }
+    // })
       });
 
       return () => ctx.revert();
@@ -333,6 +474,49 @@ const ModelCanvas = () => {
           texturePath="/assets/sphere-texture.webp"
         />
 
+         <AdditionalSphere
+          sphereRef={additionalSphere1Ref}
+          modelPath="/model/sphere.glb"
+          texturePath="/assets/sphere-texture.webp"
+          position={[-4.8, 3, 5.9]}
+          scale={0.7}
+          isTransparent={true}
+        />
+        <AdditionalSphere
+          sphereRef={additionalSphere2Ref}
+          modelPath="/model/sphere.glb"
+          texturePath="/assets/sphere-texture.webp"
+          position={[3.5, 1.5, 10]}
+          scale={1.2}
+          isTransparent={true}
+        />
+        
+        {/* Textured spheres (3) */}
+        <AdditionalSphere
+          sphereRef={additionalSphere3Ref}
+          modelPath="/model/sphere.glb"
+          texturePath="/assets/sphere-texture.webp"
+          position={[-9.2, -2, 2]}
+          scale={0.6}
+          isTransparent={false}
+        />
+        <AdditionalSphere
+          sphereRef={additionalSphere4Ref}
+          modelPath="/model/sphere.glb"
+          texturePath="/assets/sphere-texture.webp"
+          position={[11, -5, -3]}
+          scale={0.5}
+          isTransparent={false}
+        />
+        <AdditionalSphere
+          sphereRef={additionalSphere5Ref}
+          modelPath="/model/sphere.glb"
+          texturePath="/assets/sphere-texture.webp"
+          position={[-5.2, 7, -1]}
+          scale={0.7}
+          isTransparent={false}
+        />
+
         {/* Ring 1 (horizontal) - Transparent */}
         <TransparentRingModel
           ringRef={ring1Ref}
@@ -347,7 +531,7 @@ const ModelCanvas = () => {
           ringRef={ring2Ref}
           modelPath="/model/ring.glb"
           scale={[0.03, 0.015, 0.03]}
-          position={[0, 0, 0]}
+          position={[0, 0, 1]}
           rotation={[Math.PI / 2, 0, degToRad(50)]}
         />
 
@@ -355,24 +539,7 @@ const ModelCanvas = () => {
 
       </Suspense>
 
-    
-
-        {/* Small focused spot light above */}
-{/* <directionalLight
-  position={[0, 10, 5]}   // above + slightly forward
-  intensity={2.5}         // brightness
-  color="white"
-/> */}
-
-
-       {/* <pointLight
-  position={[0, 10, 0]}
-  intensity={20}          // strong highlight
-  distance={30}           // limit light reach
-  decay={2}
-/> */}
-
-
+  
       <OrbitControls enableZoom={false} />
     </Canvas>
     </div>
