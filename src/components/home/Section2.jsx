@@ -5,7 +5,7 @@ import Image from "next/image";
 const SectionTwo = () => {
   return (
     <section id='section-two' className="relative h-screen flex flex-col items-center justify-between bg-white">
-      <div className="h-[60%] w-full">
+      <div className="h-full w-full">
               <Image
                 src="/assets/gradient.png"
                 width={1000}

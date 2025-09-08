@@ -8,6 +8,7 @@ import MidSection from "@/components/home/MidSection";
 import Header from "@/components/header";
 import Section4 from "@/components/home/Section4";
 import Section5 from "@/components/home/Section5";
+import Section6 from "@/components/home/Section6";
 
 const Page = () => {
   return (
@@ -23,6 +24,7 @@ const Page = () => {
         <SectionThree />
         <Section4 />
         <Section5 />
+        <Section6 />
      
     </div>
   );

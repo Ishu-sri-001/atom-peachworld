@@ -12,6 +12,7 @@ import React, { Suspense, useRef, useEffect, useMemo } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { degToRad } from "three/src/math/MathUtils";
+// import { useControls } from 'leva'
 import * as THREE from "three";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,7 +50,7 @@ function SphereModel({ modelPath, texturePath, sphereRef }) {
   anisotropy: 1.5,            // helps with light streaking
   distortion: 0.6,            // small distortions for realism
   distortionScale: 0.2,
-  temporalDistortion: 0.1,    // dynamic shimmering
+  temporalDistortion: 0,    // dynamic shimmering
 };
 
   return (
@@ -78,7 +79,7 @@ function TransparentRingModel({
   const { nodes } = useGLTF(modelPath);
   const ringMesh = nodes.Cylinder;
 
-  const materialProps = {
+    const materialProps = {
   thickness: 0.25,            // gives depth to the glass
   roughness: 0.05,            // smooth, almost glass-like
   transmission: 1.0,          // full transparency
@@ -91,6 +92,28 @@ function TransparentRingModel({
   temporalDistortion: 0.1,    // dynamic shimmering
 };
 
+
+//  const {
+//     thickness,
+//     roughness,
+//     transmission,
+//     ior,
+//     chromaticAberration,
+//     anisotropy,
+//     distortion,
+//     distortionScale,
+//     temporalDistortion,
+//   } = useControls("Transparent Ring", {
+//     thickness: { value: 0.25, min: 0, max: 2, step: 0.01 },
+//     roughness: { value: 0.05, min: 0, max: 1, step: 0.01 },
+//     transmission: { value: 1.0, min: 0, max: 1, step: 0.01 },
+//     ior: { value: 0.6, min: 0, max: 3, step: 0.01 },
+//     chromaticAberration: { value: 0.2, min: 0, max: 1, step: 0.01 },
+//     anisotropy: { value: 1.5, min: 0, max: 10, step: 0.1 },
+//     distortion: { value: 0.6, min: 0, max: 1, step: 0.01 },
+//     distortionScale: { value: 0.2, min: 0, max: 1, step: 0.01 },
+//     temporalDistortion: { value: 0, min: 0, max: 1, step: 0.01 },
+//   });
   return (
     <mesh
       ref={ringRef}
@@ -99,7 +122,20 @@ function TransparentRingModel({
       position={position}
       rotation={rotation}
     >
-       <MeshTransmissionMaterial {...materialProps}/>
+       {/* <MeshTransmissionMaterial
+        thickness={thickness}
+        roughness={roughness}
+        transmission={transmission}
+        ior={ior}
+        chromaticAberration={chromaticAberration}
+        anisotropy={anisotropy}
+        distortion={distortion}
+        distortionScale={distortionScale}
+        temporalDistortion={temporalDistortion}
+        backside
+      /> */}
+
+      <MeshTransmissionMaterial {...materialProps}/>
     </mesh>
   );
 }
@@ -140,8 +176,6 @@ function MetallicRingModel({
   );
 }
 
-
-
 function CubeModel({ cubeRef }) {
   useEffect(() => {
    cubeRef.current.position.y= 5
@@ -150,7 +184,7 @@ function CubeModel({ cubeRef }) {
   }, [])
   
   return (
-    <mesh ref={cubeRef}  scale={[1, 30, 2]} rotation={[0,degToRad(-5),degToRad(63.2)]}>
+    <mesh ref={cubeRef}  scale={[1.5, 33, 4]} rotation={[0,degToRad(-5),degToRad(63.2)]}>
       <boxGeometry args={[2, 2, 2]} />
       <meshStandardMaterial
         color="black"
@@ -171,6 +205,9 @@ const ModelCanvas = () => {
   const ring2Ref = useRef();
   const sphereRef = useRef();
   const cubeRef = useRef();
+  const ring3Ref = useRef();
+  const ring4Ref = useRef();
+
 
   const additionalSphere1Ref = useRef();
   const additionalSphere2Ref = useRef();
@@ -246,8 +283,8 @@ const ModelCanvas = () => {
               ease: "none",
             },
             "<"
-          );
-
+          )
+          
 
         const tl3 = gsap.timeline({
           scrollTrigger: {
@@ -286,16 +323,41 @@ const ModelCanvas = () => {
   },
 });
 
-        const tt = gsap.timeline({
-            scrollTrigger: {
-              trigger:'#section-mid',
-              start: '40% 50%',
-              end: 'bottom top',
-              scrub:true,
-              // markers: true,
-              pin: true,
-            }
-          })
+    gsap.to(ring2Ref.current.position, {
+      x:39,
+      scrollTrigger: {
+        trigger:'#section-mid',
+        markers:false,
+      }
+    })
+
+      const tt = gsap.timeline({
+          scrollTrigger: {
+          trigger:'#section-mid',
+          start: '40% 50%',
+          end: 'bottom top',
+          scrub:true,
+          markers: false,
+          pin: true,
+        }
+      })
+
+      gsap.fromTo(
+      cubeRef.current.position,
+      { y: -35 },   
+      { 
+        // delay:-1,
+        y: -1, 
+        ease: "none" ,
+        scrollTrigger: {
+          trigger:'#section-mid',
+          start: '30% 60%',
+          end: '40% 60%',
+          scrub:true,
+          markers: false,
+        }
+      }
+    )
 
           tt
         //   .to(sphereRef.current.rotation, {
@@ -304,19 +366,11 @@ const ModelCanvas = () => {
         //   ease: "none",
         // })
 
-        .fromTo(
-      cubeRef.current.position,
-      { y: -32 },   
-      { 
-        delay:-1.5,
-        y: -0.5, 
-        ease: "none" 
-      }, '<'
-    )
+    
     .to(sphereRef.current.position, {
       x: 30,
       y:-15,
-      delay: 0.5,
+      // delay: 0.5,
       duration:2,
       ease:'none'
     }, '<' )
@@ -326,6 +380,13 @@ const ModelCanvas = () => {
     y: -30, 
     delay:0.5,
     ease: "ease" 
+    })
+
+    gsap.to(ring2Ref.current.position, {
+      y:-22,
+      scrollTrigger: {
+        trigger: '#section-three'
+      }
     })
 
       const tl4 = gsap.timeline({
@@ -339,9 +400,16 @@ const ModelCanvas = () => {
       },
     })
     tl4.to( cubeRef.current.position, {
-      y: 25,
+      y: 30,
       delay:1.5,
       ease:'none'
+    })
+
+    gsap.to(ring2Ref.current.position, {
+      x:0,
+      scrollTrigger: {
+        trigger: '#section-four'
+      }
     })
 
     
@@ -380,6 +448,19 @@ const ModelCanvas = () => {
     // delay:0.5,
     ease: "ease" }  
 )
+  tl5.to("#section-four::after", {
+  opacity: 1,
+  scale: 3, // expands radial gradient to fill screen
+  ease: "power2.inOut",
+  duration: 2
+}, "<")
+   tl5.to("#light-overlay", {
+  opacity: 1,
+  scale: 3,
+  ease: "power2.inOut",
+  duration: 2,
+  transformOrigin: "center center"
+}, "<")
     .to(sphereRef.current.scale, {
       x: 3.3,
       y:3.3,
@@ -428,19 +509,197 @@ const ModelCanvas = () => {
       y:20,
       // delay:0.5,
     }, '<')
+   
+    .to(sphereRef.current.scale, {
+      x:1.5,
+      y:1.5,
+      z:1.5,
+      duration:0.01,
+    }
+    )
+    
+      .to(additionalSphere3Ref.current.position, {
+        x:-35,
+      },'<')
+      .to(additionalSphere4Ref.current.position, {
+        x:40,
+      },'<')
+      .to(additionalSphere4Ref.current.position, {
+        y:-28,
+      })
+      
+
+    const sphereTimeline =gsap.timeline({
+        scrollTrigger: {
+        trigger:'#section-five',
+        start: 'top bottom',
+        end: 'bottom top',
+        // pin:true,
+        scrub: true,
+        // markers: true,
+      }
+       })
+      sphereTimeline.to(sphereRef.current.position, {
+        y: -17,
+        ease:'none'
+      })
+   
+    
+    const tl6 = gsap.timeline({
+      scrollTrigger: {
+        trigger:'#section-five',
+        start: 'top bottom',
+        end: 'bottom top',
+        // pin:true,
+        scrub: true,
+        // markers: true,
+      }
+    })
 
 
-    // gsap.to(sphereRef.current.position, {
-    //   y:20,
-    //   scrollTrigger: {
-    //     trigger: '#section-four',
-    //     start: 'top bottom',
-    //     end: 'bottom top',
-    //     // scrub:true,
-    //     markers: true,
-    //   }
-    // })
+    tl6
+    .to(ring2Ref.current.scale, {
+        x: 0.025, 
+        y: 0.015, 
+        z: 0.025,
+    })
+    .to(ring2Ref.current.rotation, {
+        x:0,
+        y:degToRad(50),
+        z:0
+    },'<')
+    .to(ring2Ref.current.position, {
+      y:-1,
+      x:0,
+      // duration:0.1,
+    }, '<')  
+    .to(ring2Ref.current.rotation, {
+      y:`+=${degToRad(-10)}}`,
+      x:0,
+      z:`+=${degToRad(-20)}`
+      // delay:0.5,
+    })
+    .to(ring2Ref.current.rotation, {
+      y:`+=${degToRad(-20)}}`,
+      // delay:0.2,
+      // z:`+=${degToRad(10)}}`
+    }, '<')
+    .to(ring2Ref.current.position, {
+      y:2,
+      x:0,
+      // duration:0.1,
+    })  
+    // .to(sphereRef.current.position, {
+    //   x:0,
+    //   // delay:-0.1,
+    //   y:3,
+    //   duration:1,
+    // }, '<')
+    .to(ring2Ref.current.position, {
+      y:4,
+      // duration:2,
+    })
+
+    .fromTo(ring3Ref.current.scale,
+  { x: 0, y: 0, z: 0 },
+  { x: 0.025, y: 0.015, z: 0.025, duration: 1.5, ease: "power2.out",
+    
+   },
+      '<'
+)
+  .to(ring3Ref.current.rotation, {
+    x:degToRad(30),
+    y:degToRad(-35),
+    z:degToRad(20),
+    delay:0.4,
+  }, '<')
+  .to(ring2Ref.current.position, {
+    y:6
+  },'<')
+.fromTo(ring4Ref.current.scale,
+  { x: 0, y: 0, z: 0 },
+  { x: 0.025, y: 0.015, z: 0.015, duration: 1.5, ease: "power2.out" },
+    '<' 
+)
+  .to(ring3Ref.current.position, {
+    y:0,
+  },'<')
+
+  .to(ring4Ref.current.position, {
+    x:0,
+    y:-7,
+    z:2
+  }, '<')
+
+  .to(ring2Ref.current.rotation, {
+      x:0,
+      y:0,
+      z:0
+  })
+  .to(ring2Ref.current.position, {
+    y:15,
+    delay:0.2
+  },'<')
+
+  .to(ring3Ref.current.position, {
+    y:15,
+    delay:0.2
+  },'<')
+  .to(ring4Ref.current.position, {
+    y:15,
+    delay:0.2
+  },'<')
+  // .to(sphereRef.current.position, {
+  //   y:-12,
+  // },'<')
+
+  // .to(ring4Ref.current.rotation, {
+  //   x:degToRad(30),
+  //   y:degToRad(-35),
+  //   z:degToRad(70)
+  // })
+    
+    // .to(ring2Ref.current.rotation, {
+    //   x: degToRad(-10),
+    // },'<')
+
       });
+
+      gsap.to([additionalSphere3Ref.current.scale,
+      additionalSphere4Ref.current.scale], {
+        x:5,
+        y:5,
+        z:5,
+        scrollTrigger: {
+          trigger:'#section-six',
+          start: 'top bottom',
+        }
+      })
+
+      const tl7= gsap.timeline({
+        scrollTrigger: {
+          trigger:'#section-six',
+          start:'top top',
+          end:'bottom bottom',
+          scrub:true,
+          // markers:true,
+        }
+      })
+
+      tl7.to(sphereRef.current.position, {
+        y:0,
+        ease:'none'
+      })
+      .to(additionalSphere3Ref.current.position, {
+        x:-13,
+        y:5,
+        z:6,
+      })
+      .to(additionalSphere4Ref.current.position, {
+        x:13,
+        y:-5,
+        z:6,
+      },'<')
 
       return () => ctx.revert();
     }, 500);
@@ -465,7 +724,7 @@ const ModelCanvas = () => {
       <Suspense fallback={null}>
         {/* <Environment background={false} preset="sunset" /> */}
          <Environment preset="studio" />
-
+         <ambientLight intensity={5} />
         
         {/* Sphere inside */}
         <SphereModel
@@ -531,11 +790,29 @@ const ModelCanvas = () => {
           ringRef={ring2Ref}
           modelPath="/model/ring.glb"
           scale={[0.03, 0.015, 0.03]}
-          position={[0, 0, 1]}
+          position={[0.5, 0, 1]}
           rotation={[Math.PI / 2, 0, degToRad(50)]}
         />
 
+        <MetallicRingModel
+  ringRef={ring3Ref}
+  modelPath="/model/ring.glb"
+  scale={[0, 0, 0]}
+  position={[0, -2, 0]}  
+  rotation={[degToRad(0), degToRad(-20), degToRad(-20)]}
+/>
+
+<MetallicRingModel
+  ringRef={ring4Ref}
+  modelPath="/model/ring.glb"
+  scale={[0, 0, 0]}
+  position={[0, -2, 0]}  
+  rotation={[0, 0, degToRad(-20)]}
+/>
+
         <CubeModel cubeRef={cubeRef} />
+
+        {/* <Leva collapsed /> */}
 
       </Suspense>
 
