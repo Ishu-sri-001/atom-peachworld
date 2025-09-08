@@ -372,7 +372,9 @@ const ModelCanvas = () => {
       x:39,
       scrollTrigger: {
         trigger:'#section-mid',
+        scrub:true,
         markers:false,
+        duration:0.1,
       }
     })
 
