@@ -361,7 +361,7 @@ const ModelCanvas = () => {
  scrollTrigger: {
     trigger: "#section-two",
     start: "top top",         
-    endTrigger: "#section-five", 
+    endTrigger: "#section-six", 
     end: "bottom top ",
     scrub: true,
     // markers: true
@@ -691,6 +691,8 @@ const ModelCanvas = () => {
   },'<')
       });
 
+  
+
       gsap.to([additionalSphere3Ref.current.scale,
       additionalSphere4Ref.current.scale], {
         x:5,
@@ -701,6 +703,18 @@ const ModelCanvas = () => {
           start: 'top bottom',
         }
       })
+      gsap.to(sphereRef.current.rotation, {
+        z: `+=${degToRad(360 * 10)}`, 
+        ease: "none",
+        scrollTrigger: {
+          trigger: "#section-six",
+          start: "top bottom",         
+          // endTrigger: "#section-six", 
+          end: "bottom top ",
+          scrub: true,
+        markers: false
+  },
+});
 
       const tl7= gsap.timeline({
         scrollTrigger: {
@@ -711,6 +725,7 @@ const ModelCanvas = () => {
           // markers:true,
         }
       })
+
 
       tl7.to(sphereRef.current.position, {
         y:0,
