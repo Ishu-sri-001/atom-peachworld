@@ -7,6 +7,8 @@ import {
   Environment,
   MeshTransmissionMaterial,
 } from "@react-three/drei";
+import { Loader } from "@react-three/drei";
+import { useProgress } from "@react-three/drei";
 import { useControls } from 'leva';
 import React, { Suspense, useRef, useEffect, useMemo } from "react";
 import gsap from "gsap";
@@ -14,8 +16,34 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { degToRad } from "three/src/math/MathUtils";
 // import { useControls } from 'leva'
 import * as THREE from "three";
+import Image from "next/image";
 
 gsap.registerPlugin(ScrollTrigger);
+
+function useModelsReady(dependencies) {
+  const { progress } = useProgress();
+  const [ready, setReady] = React.useState(false);
+
+  useEffect(() => {
+    console.log(`Loading progress: ${progress.toFixed(2)}%`);
+
+    if (progress === 100) {
+      // Keep checking until all refs are filled
+      const interval = setInterval(() => {
+        if (dependencies.every(ref => ref.current)) {
+          setReady(true);
+          clearInterval(interval); // stop checking
+        }
+      }, 50); // check every 50ms
+
+      return () => clearInterval(interval);
+    }
+  }, [progress, dependencies]);
+
+  return ready;
+}
+
+
 
 function SphereModel({ modelPath, texturePath, sphereRef }) {
   const { nodes } = useGLTF(modelPath);
@@ -215,8 +243,25 @@ const ModelCanvas = () => {
   const additionalSphere4Ref = useRef();
   const additionalSphere5Ref = useRef();
 
+  const ready = useModelsReady([
+    ring1Ref,
+    ring2Ref,
+    sphereRef,
+    cubeRef,
+    ring3Ref,
+    ring4Ref,
+    additionalSphere1Ref,
+    additionalSphere2Ref,
+    additionalSphere3Ref,
+    additionalSphere4Ref,
+    additionalSphere5Ref
+  ]);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
+
+    if (!ready) return;
+
+
       const ctx = gsap.context(() => {
         if (!ring1Ref.current || !ring2Ref.current) {
           console.log("Refs not ready yet");
@@ -446,14 +491,9 @@ const ModelCanvas = () => {
     x: 0, 
     y: 0, 
     // delay:0.5,
-    ease: "ease" }  
+    ease: "none" }  
 )
-  tl5.to("#section-four::after", {
-  opacity: 1,
-  scale: 3, // expands radial gradient to fill screen
-  ease: "power2.inOut",
-  duration: 2
-}, "<")
+
    tl5.to("#light-overlay", {
   opacity: 1,
   scale: 3,
@@ -649,20 +689,6 @@ const ModelCanvas = () => {
     y:15,
     delay:0.2
   },'<')
-  // .to(sphereRef.current.position, {
-  //   y:-12,
-  // },'<')
-
-  // .to(ring4Ref.current.rotation, {
-  //   x:degToRad(30),
-  //   y:degToRad(-35),
-  //   z:degToRad(70)
-  // })
-    
-    // .to(ring2Ref.current.rotation, {
-    //   x: degToRad(-10),
-    // },'<')
-
       });
 
       gsap.to([additionalSphere3Ref.current.scale,
@@ -702,12 +728,29 @@ const ModelCanvas = () => {
       },'<')
 
       return () => ctx.revert();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+    
+  }, [ready]);
 
   return (
+    <>
+     {!ready && (
+  <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+    <div className="relative flex items-center justify-center">
+      {/* Logo in center */}
+      <Image
+        src="/assets/atom-logo.svg" 
+        alt="Logo" 
+        width={200}
+        height={200}
+        className="w-20 h-20 relative z-10"
+      />
+
+     
+      <div className="absolute w-[15vw] h-[15vw] border-4 border-dotted border-black rounded-full animate-spin-slow"></div>
+    </div>
+  </div>
+)}
+
     <div className="fixed inset-0 z-20">
     <Canvas
       style={{
@@ -720,7 +763,7 @@ const ModelCanvas = () => {
         pointerEvents: "none",
       }}
       camera={{ position: [0, 2, 20], fov: 60 }}
-    >
+      >
       <Suspense fallback={null}>
         {/* <Environment background={false} preset="sunset" /> */}
          <Environment preset="studio" />
@@ -731,7 +774,7 @@ const ModelCanvas = () => {
           sphereRef={sphereRef}
           modelPath="/model/sphere.glb"
           texturePath="/assets/sphere-texture.webp"
-        />
+          />
 
          <AdditionalSphere
           sphereRef={additionalSphere1Ref}
@@ -740,7 +783,7 @@ const ModelCanvas = () => {
           position={[-4.8, 3, 5.9]}
           scale={0.7}
           isTransparent={true}
-        />
+          />
         <AdditionalSphere
           sphereRef={additionalSphere2Ref}
           modelPath="/model/sphere.glb"
@@ -748,7 +791,7 @@ const ModelCanvas = () => {
           position={[3.5, 1.5, 10]}
           scale={1.2}
           isTransparent={true}
-        />
+          />
         
         {/* Textured spheres (3) */}
         <AdditionalSphere
@@ -774,7 +817,7 @@ const ModelCanvas = () => {
           position={[-5.2, 7, -1]}
           scale={0.7}
           isTransparent={false}
-        />
+          />
 
         {/* Ring 1 (horizontal) - Transparent */}
         <TransparentRingModel
@@ -783,7 +826,7 @@ const ModelCanvas = () => {
           scale={[0.038, 0.02, 0.038]}
           position={[0, 0.3, -2]}
           rotation={[0, 0, 0]}
-        />
+          />
 
         {/* Ring 2 (vertical, rotated 90°) - Metallic */}
         <MetallicRingModel
@@ -792,7 +835,7 @@ const ModelCanvas = () => {
           scale={[0.03, 0.015, 0.03]}
           position={[0.5, 0, 1]}
           rotation={[Math.PI / 2, 0, degToRad(50)]}
-        />
+          />
 
         <MetallicRingModel
   ringRef={ring3Ref}
@@ -816,10 +859,11 @@ const ModelCanvas = () => {
 
       </Suspense>
 
-  
       <OrbitControls enableZoom={false} />
     </Canvas>
     </div>
+    {/* <Loader /> */}
+  </>
   );
 };
 
