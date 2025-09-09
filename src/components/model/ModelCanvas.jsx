@@ -168,12 +168,12 @@ function useParallaxMovement(groupRef) {
     if (!groupRef.current) return;
     groupRef.current.position.x = THREE.MathUtils.lerp(
       groupRef.current.position.x,
-      -mouse.current.x * 2,
+      -mouse.current.x * 1.1,
       0.05
     );
     groupRef.current.position.y = THREE.MathUtils.lerp(
       groupRef.current.position.y,
-      mouse.current.y * 2,
+      mouse.current.y * 1.1,
       0.05
     );
     //  groupRef.current.position.x = -mouse.current.x * 2;
