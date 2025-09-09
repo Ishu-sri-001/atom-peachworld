@@ -29,7 +29,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-       <LenisSmoothScroll />
+       <LenisSmoothScroll /> 
       <body
         className={`${Font1.variable} ${Font2.variable} antialiased`}
       >

@@ -1,5 +1,5 @@
 "use client";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
   useGLTF,
@@ -7,35 +7,31 @@ import {
   Environment,
   MeshTransmissionMaterial,
 } from "@react-three/drei";
-import { Loader } from "@react-three/drei";
-import { useProgress } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { Loader, useProgress } from "@react-three/drei";
 import { useControls } from 'leva';
 import React, { Suspense, useRef, useEffect, useMemo } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { degToRad } from "three/src/math/MathUtils";
-// import { useControls } from 'leva'
 import * as THREE from "three";
 import Image from "next/image";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// --------- Helpers ----------
 function useModelsReady(dependencies) {
   const { progress } = useProgress();
   const [ready, setReady] = React.useState(false);
 
   useEffect(() => {
-    console.log(`Loading progress: ${progress.toFixed(2)}%`);
-
     if (progress === 100) {
-      // Keep checking until all refs are filled
       const interval = setInterval(() => {
         if (dependencies.every(ref => ref.current)) {
           setReady(true);
-          clearInterval(interval); // stop checking
+          clearInterval(interval);
         }
-      }, 50); // check every 50ms
-
+      }, 50);
       return () => clearInterval(interval);
     }
   }, [progress, dependencies]);
@@ -43,182 +39,110 @@ function useModelsReady(dependencies) {
   return ready;
 }
 
+// --------- Light Following Sphere ----------
+function LightFollowingSphere({ sphereRef, spotLightRef1, spotLightRef2, pointLightRef1, pointLightRef2 }) {
+  useFrame(() => {
+    if (!sphereRef.current) return;
+    const p = sphereRef.current.position;
+    spotLightRef1.current.position.set(p.x, p.y + 10, p.z + 5);
+    spotLightRef2.current.position.set(p.x, p.y - 5, p.z + 3);
+    pointLightRef1.current.position.set(p.x + 1, p.y - 2.8, p.z + 3.3);
+    pointLightRef2.current.position.set(p.x + 1, p.y + 2.8, p.z + 3.3);
+  });
+  return null;
+}
 
-
+// --------- Sphere Models ----------
 function SphereModel({ modelPath, texturePath, sphereRef }) {
   const { nodes } = useGLTF(modelPath);
   const texture = useTexture(texturePath);
-
   const sphereMesh = nodes.BlackBall_mesh;
 
+  const material = useMemo(() => new THREE.MeshStandardMaterial({
+    map: texture,
+    metalness: 1.4,
+    roughness: 0.7
+  }), [texture]);
+
   return (
-    <mesh
-      ref={sphereRef}
-      geometry={sphereMesh.geometry}
-      scale={1.9}
-      position={[1, 0, 0]}
-    >
-      <meshStandardMaterial map={texture} metalness={1.0} roughness={0.7} />
+    <mesh ref={sphereRef} geometry={sphereMesh.geometry} scale={1.9} position={[1, 0, 0]} castShadow receiveShadow>
+      <primitive object={material} attach="material" />
     </mesh>
   );
 }
 
-  function AdditionalSphere({ position, scale, isTransparent, sphereRef, modelPath, texturePath }) {
+function AdditionalSphere({ position, scale, isTransparent, sphereRef, modelPath, texturePath }) {
   const { nodes } = useGLTF(modelPath);
   const texture = useTexture(texturePath);
   const sphereMesh = nodes.BlackBall_mesh;
 
-    const materialProps = {
-  thickness: 0.25,            // gives depth to the glass
-  roughness: 0.05,            // smooth, almost glass-like
-  transmission: 1.0,          // full transparency
-  ior: 0.6,                   // realistic glass refraction
-  chromaticAberration: 1.0,  // subtle rainbow dispersion
-  backside: true,             // render both sides
-  anisotropy: 1.5,            // helps with light streaking
-  distortion: 0.6,            // small distortions for realism
-  distortionScale: 0.2,
-  temporalDistortion: 0,    // dynamic shimmering
-};
+  const materialProps = {
+    thickness: 0.25,
+    roughness: 0.05,
+    transmission: 1.0,
+    ior: 0.6,
+    chromaticAberration: 1.0,
+    backside: true,
+    anisotropy: 1.5,
+    distortion: 0.6,
+    distortionScale: 0.2,
+    temporalDistortion: 0,
+  };
 
   return (
-    <mesh
-      ref={sphereRef}
-      geometry={sphereMesh.geometry}
-      scale={scale}
-      position={position}
-    >
+    <mesh ref={sphereRef} geometry={sphereMesh.geometry} scale={scale} position={position} castShadow receiveShadow>
       {isTransparent ? (
-        <MeshTransmissionMaterial {...materialProps} />
+        <meshPhysicalMaterial
+        transmission={1} roughness={0.4} thickness={0.4} ior={1.5} reflectivity={1.5}
+         attenuationDistance={1.5} attenuationColor={"white"}
+        iridescence={1.0} iridescenceIOR={1.3} iridescenceThicknessRange={[100, 400]}
+      />
       ) : (
-        <meshStandardMaterial map={texture} metalness={1.0} roughness={0.7} />
+        <meshStandardMaterial map={texture} color={'grey'} metalness={1.0} roughness={0.7} />
       )}
     </mesh>
   );
 }
 
-function TransparentRingModel({
-  modelPath,
-  scale = [1.2, 0.7, 1.2],
-  position = [0, 0, 0],
-  rotation = [0, 0, 0],
-  ringRef,
-}) {
+
+function TransparentRingModel({ modelPath, scale, position, rotation, ringRef }) {
   const { nodes } = useGLTF(modelPath);
   const ringMesh = nodes.Cylinder;
 
-    const materialProps = {
-  thickness: 0.25,            // gives depth to the glass
-  roughness: 0.05,            // smooth, almost glass-like
-  transmission: 1.0,          // full transparency
-  ior: 0.6,                   // realistic glass refraction
-  chromaticAberration: 1.0,  // subtle rainbow dispersion
-  backside: true,             // render both sides
-  anisotropy: 1.5,            // helps with light streaking
-  distortion: 0.6,            // small distortions for realism
-  distortionScale: 0.2,
-  temporalDistortion: 0.1,    // dynamic shimmering
-};
-
-
-//  const {
-//     thickness,
-//     roughness,
-//     transmission,
-//     ior,
-//     chromaticAberration,
-//     anisotropy,
-//     distortion,
-//     distortionScale,
-//     temporalDistortion,
-//   } = useControls("Transparent Ring", {
-//     thickness: { value: 0.25, min: 0, max: 2, step: 0.01 },
-//     roughness: { value: 0.05, min: 0, max: 1, step: 0.01 },
-//     transmission: { value: 1.0, min: 0, max: 1, step: 0.01 },
-//     ior: { value: 0.6, min: 0, max: 3, step: 0.01 },
-//     chromaticAberration: { value: 0.2, min: 0, max: 1, step: 0.01 },
-//     anisotropy: { value: 1.5, min: 0, max: 10, step: 0.1 },
-//     distortion: { value: 0.6, min: 0, max: 1, step: 0.01 },
-//     distortionScale: { value: 0.2, min: 0, max: 1, step: 0.01 },
-//     temporalDistortion: { value: 0, min: 0, max: 1, step: 0.01 },
-//   });
   return (
-    <mesh
-      ref={ringRef}
-      geometry={ringMesh.geometry}
-      scale={scale}
-      position={position}
-      rotation={rotation}
-    >
-       {/* <MeshTransmissionMaterial
-        thickness={thickness}
-        roughness={roughness}
-        transmission={transmission}
-        ior={ior}
-        chromaticAberration={chromaticAberration}
-        anisotropy={anisotropy}
-        distortion={distortion}
-        distortionScale={distortionScale}
-        temporalDistortion={temporalDistortion}
-        backside
-      /> */}
-
-      <MeshTransmissionMaterial {...materialProps}/>
+    <mesh ref={ringRef} geometry={ringMesh.geometry} scale={scale} position={position} rotation={rotation} castShadow receiveShadow>
+      <meshPhysicalMaterial
+        transmission={1} roughness={0.1} thickness={0.4} ior={1.5}
+        reflectivity={0.8} attenuationDistance={1.5} attenuationColor={"white"}
+        iridescence={1.0} iridescenceIOR={1.3} iridescenceThicknessRange={[100, 400]}
+      />
     </mesh>
   );
 }
 
-function MetallicRingModel({
-  modelPath,
-  scale = [1.2, 0.7, 1.2],
-  position = [0, 0, 0],
-  rotation = [0, 0, 0],
-  ringRef,
-}) {
+function MetallicRingModel({ modelPath, scale, position, rotation, ringRef }) {
   const { nodes } = useGLTF(modelPath);
   const ringMesh = nodes.Cylinder;
 
   return (
-    <mesh
-      ref={ringRef}
-      geometry={ringMesh.geometry}
-      scale={scale}
-      position={position}
-      rotation={rotation}
-    >
-      {/* <meshStandardMaterial color="#black" metalness={1.0} roughness={0.1} /> */}
+    <mesh ref={ringRef} geometry={ringMesh.geometry} scale={scale} position={position} rotation={rotation} castShadow receiveShadow>
       <meshStandardMaterial
-  color="#202020"        // deep base color
-  metalness={1.0}        // full metal
-  roughness={0.05}       // highly polished
-  envMapIntensity={0.2}  // boosts environment reflections
-  clearcoat={1.0}        // shiny clear coat
-  clearcoatRoughness={0.05}
-  sheen={0.8}            // subtle iridescent glow
-  sheenTint={0}        // adjust tint (bluish/purple edges)
-  iridescence={1.0}      // enables rainbow-like reflections
-  iridescenceIOR={1.3}   // thin-film refraction index
-  iridescenceThicknessRange={[100, 400]} // nm thickness for color shifts
-/>
+        color="#160936" metalness={1.0} roughness={0.4} envMapIntensity={1.5}
+        clearcoat={1.0} clearcoatRoughness={0.0} sheen={1.0} sheenTint={0.5}
+        iridescence={1.0} iridescenceIOR={1.5} iridescenceThicknessRange={[200, 800]}
+      />
     </mesh>
   );
 }
 
 function CubeModel({ cubeRef }) {
   useEffect(() => {
-   cubeRef.current.position.y= 5
-   cubeRef.current.position.x=-5
-   cubeRef.current.position.z=-1.5;
-  }, [])
-  
+    cubeRef.current.position.set(-5, 5, -1.5);
+  }, []);
   return (
-    <mesh ref={cubeRef}  scale={[1.5, 33, 4]} rotation={[0,degToRad(-5),degToRad(63.2)]}>
+    <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(63.2)]}>
       <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial
-        color="black"
-        metalness={0.2}
-        roughness={0.9}
-      />
+      <meshStandardMaterial color="black" metalness={0.2} roughness={0.9} />
     </mesh>
   );
 }
@@ -228,6 +152,45 @@ function CubeModel({ cubeRef }) {
 useGLTF.preload("/model/sphere.glb");
 useGLTF.preload("/model/ring.glb");
 
+function useParallaxMovement(groupRef) {
+  const mouse = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      mouse.current = { x, y };
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    groupRef.current.position.x = THREE.MathUtils.lerp(
+      groupRef.current.position.x,
+      -mouse.current.x * 2,
+      0.05
+    );
+    groupRef.current.position.y = THREE.MathUtils.lerp(
+      groupRef.current.position.y,
+      mouse.current.y * 2,
+      0.05
+    );
+    //  groupRef.current.position.x = -mouse.current.x * 2;
+    // groupRef.current.position.y = mouse.current.y * 2;
+  });
+}
+
+
+function ParallaxGroup({ children }) {
+  const groupRef = useRef();
+  useParallaxMovement(groupRef);
+  return <group ref={groupRef}>{children}</group>;
+}
+
+
+
 const ModelCanvas = () => {
   const ring1Ref = useRef();
   const ring2Ref = useRef();
@@ -235,26 +198,23 @@ const ModelCanvas = () => {
   const cubeRef = useRef();
   const ring3Ref = useRef();
   const ring4Ref = useRef();
-
-
+  const spotLightRef1 = useRef();
+  const spotLightRef2 = useRef();
+  const pointLightRef1 = useRef();
+  const pointLightRef2 = useRef();
   const additionalSphere1Ref = useRef();
   const additionalSphere2Ref = useRef();
   const additionalSphere3Ref = useRef();
   const additionalSphere4Ref = useRef();
   const additionalSphere5Ref = useRef();
 
+  const groupRef = useRef();
+
+  // useParallaxMovement(groupRef);
+
   const ready = useModelsReady([
-    ring1Ref,
-    ring2Ref,
-    sphereRef,
-    cubeRef,
-    ring3Ref,
-    ring4Ref,
-    additionalSphere1Ref,
-    additionalSphere2Ref,
-    additionalSphere3Ref,
-    additionalSphere4Ref,
-    additionalSphere5Ref
+    ring1Ref, ring2Ref, sphereRef, cubeRef, ring3Ref, ring4Ref,
+    additionalSphere1Ref, additionalSphere2Ref, additionalSphere3Ref, additionalSphere4Ref, additionalSphere5Ref
   ]);
 
   useEffect(() => {
@@ -275,7 +235,7 @@ const ModelCanvas = () => {
             trigger: "#section-one",
             start: "top top",
             pin: true,
-            end: "+=1800",
+            end: "+=400",
             scrub: true,
             // markers:true
           },
@@ -353,6 +313,11 @@ const ModelCanvas = () => {
           z: 1,
           ease: 'none'
         }, '<')
+        .to(pointLightRef1.current.position, {
+          z: 2.5,
+          x:0,
+          y:0
+        }, '<')
 
 
         gsap.to(sphereRef.current.rotation, {
@@ -406,15 +371,7 @@ const ModelCanvas = () => {
       }
     )
 
-          tt
-        //   .to(sphereRef.current.rotation, {
-        //   z: `+=${degToRad(360 * 5)}`,
-        //   duration: 2,
-        //   ease: "none",
-        // })
-
-    
-    .to(sphereRef.current.position, {
+    tt.to(sphereRef.current.position, {
       x: 30,
       y:-15,
       // delay: 0.5,
@@ -546,10 +503,12 @@ const ModelCanvas = () => {
     ] , {
       y: 20,
       delay:0.5,
+      duration:2,
     })
     .to (sphereRef.current.position, {
       y:20,
       // delay:0.5,
+      duration:2,
     }, '<')
    
     .to(sphereRef.current.scale, {
@@ -570,7 +529,6 @@ const ModelCanvas = () => {
         y:-28,
       })
       
-
     const sphereTimeline =gsap.timeline({
         scrollTrigger: {
         trigger:'#section-five',
@@ -638,7 +596,7 @@ const ModelCanvas = () => {
     //   duration:1,
     // }, '<')
     .to(ring2Ref.current.position, {
-      y:4,
+      y:5,
       // duration:2,
     })
 
@@ -656,20 +614,26 @@ const ModelCanvas = () => {
     delay:0.4,
   }, '<')
   .to(ring2Ref.current.position, {
-    y:6
+    y:6.5
   },'<')
 .fromTo(ring4Ref.current.scale,
   { x: 0, y: 0, z: 0 },
   { x: 0.025, y: 0.015, z: 0.015, duration: 1.5, ease: "power2.out" },
     '<' 
 )
+    .to(ring3Ref.current.rotation, {
+    
+    z:degToRad(60),
+    delay:0.4,
+  }, '<')
   .to(ring3Ref.current.position, {
     y:0,
   },'<')
+  
 
   .to(ring4Ref.current.position, {
     x:0,
-    y:-7,
+    y:-6,
     z:2
   }, '<')
 
@@ -684,15 +648,14 @@ const ModelCanvas = () => {
   },'<')
 
   .to(ring3Ref.current.position, {
-    y:15,
-    delay:0.2
+    y:18,
+    // delay:0.2
   },'<')
   .to(ring4Ref.current.position, {
     y:15,
-    delay:0.2
+    delay:0.1
   },'<')
       });
-
   
 
       gsap.to([additionalSphere3Ref.current.scale,
@@ -700,9 +663,11 @@ const ModelCanvas = () => {
         x:5,
         y:5,
         z:5,
+        duration:0.3,
         scrollTrigger: {
           trigger:'#section-six',
           start: 'top bottom',
+          scrub:true,
         }
       })
       gsap.to(sphereRef.current.rotation, {
@@ -728,7 +693,6 @@ const ModelCanvas = () => {
         }
       })
 
-
       tl7.to(sphereRef.current.position, {
         y:0,
         ease:'none'
@@ -749,138 +713,65 @@ const ModelCanvas = () => {
   }, [ready]);
 
   return (
-    <>
-     {!ready && (
-  <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-    <div className="relative flex items-center justify-center">
-      {/* Logo in center */}
-      <Image
-        src="/assets/atom-logo.svg" 
-        alt="Logo" 
-        width={200}
-        height={200}
-        className="w-20 h-20 relative z-10"
-      />
+<>
+      {!ready && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+          <div className="relative flex items-center justify-center">
+            <Image src="/assets/atom-logo.svg" alt="Logo" width={200} height={200} className="w-20 h-20 relative z-10" />
+            <div className="absolute w-[15vw] h-[15vw] border-4 border-dotted border-black rounded-full animate-spin-slow"></div>
+          </div>
+        </div>
+      )}
 
-     
-      <div className="absolute w-[15vw] h-[15vw] border-4 border-dotted border-black rounded-full animate-spin-slow"></div>
-    </div>
-  </div>
-)}
+      <div className="fixed inset-0 z-20">
+        <Canvas
+          shadows
+          gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+          style={{ height: "100vh", width: "100vw", position: "fixed", top: 0, left: 0, zIndex: 20, pointerEvents: "none" }}
+          camera={{ position: [0, 2, 20], fov: 60 }}
+        >
+          <Suspense fallback={null}>
+            <Environment preset="warehouse" background={false} intensity={0.4} />
 
-    <div className="fixed inset-0 z-20">
-    <Canvas
-      style={{
-        height: "100vh",
-        width: "100vw",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        zIndex: 20,
-        pointerEvents: "none",
-      }}
-      camera={{ position: [0, 2, 20], fov: 60 }}
-      >
-      <Suspense fallback={null}>
-        {/* <Environment background={false} preset="sunset" /> */}
-         <Environment preset="studio" />
-         <ambientLight intensity={5} />
-        
-        {/* Sphere inside */}
-        <SphereModel
-          sphereRef={sphereRef}
-          modelPath="/model/sphere.glb"
-          texturePath="/assets/sphere-texture.webp"
-          />
+              <ParallaxGroup>
+            <pointLight ref={pointLightRef1} position={[1, -2.8, 3.3]} intensity={12} color="#CF7C00" distance={200} decay={2} />
+            <pointLight ref={pointLightRef2} position={[1, 2.8, 3.3]} intensity={12} color="#ffffff" distance={200} decay={2} />
 
-         <AdditionalSphere
-          sphereRef={additionalSphere1Ref}
-          modelPath="/model/sphere.glb"
-          texturePath="/assets/sphere-texture.webp"
-          position={[-4.8, 3, 5.9]}
-          scale={0.7}
-          isTransparent={true}
-          />
-        <AdditionalSphere
-          sphereRef={additionalSphere2Ref}
-          modelPath="/model/sphere.glb"
-          texturePath="/assets/sphere-texture.webp"
-          position={[3.5, 1.5, 10]}
-          scale={1.2}
-          isTransparent={true}
-          />
-        
-        {/* Textured spheres (3) */}
-        <AdditionalSphere
-          sphereRef={additionalSphere3Ref}
-          modelPath="/model/sphere.glb"
-          texturePath="/assets/sphere-texture.webp"
-          position={[-9.2, -2, 2]}
-          scale={0.6}
-          isTransparent={false}
-        />
-        <AdditionalSphere
-          sphereRef={additionalSphere4Ref}
-          modelPath="/model/sphere.glb"
-          texturePath="/assets/sphere-texture.webp"
-          position={[11, -5, -3]}
-          scale={0.5}
-          isTransparent={false}
-        />
-        <AdditionalSphere
-          sphereRef={additionalSphere5Ref}
-          modelPath="/model/sphere.glb"
-          texturePath="/assets/sphere-texture.webp"
-          position={[-5.2, 7, -1]}
-          scale={0.7}
-          isTransparent={false}
-          />
+            <spotLight ref={spotLightRef1} position={[0, 10, 5]} intensity={50} angle={Math.PI/2} penumbra={0.4} decay={2} distance={50} color="#ffffff" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+            <spotLight ref={spotLightRef2} position={[0, -5, 3]} intensity={50} angle={Math.PI/2} penumbra={0.5} decay={2} distance={100} color="#CF7C00" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
 
-        {/* Ring 1 (horizontal) - Transparent */}
-        <TransparentRingModel
-          ringRef={ring1Ref}
-          modelPath="/model/ring.glb"
-          scale={[0.038, 0.02, 0.038]}
-          position={[0, 0.3, -2]}
-          rotation={[0, 0, 0]}
-          />
+            <directionalLight color="#ffffff" intensity={2} position={[10, 15, 20]} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+            <directionalLight color="#CF7C00" intensity={5} position={[10, -10, 10]} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
 
-        {/* Ring 2 (vertical, rotated 90°) - Metallic */}
-        <MetallicRingModel
-          ringRef={ring2Ref}
-          modelPath="/model/ring.glb"
-          scale={[0.03, 0.015, 0.03]}
-          position={[0.5, 0, 1]}
-          rotation={[Math.PI / 2, 0, degToRad(50)]}
-          />
+            <LightFollowingSphere
+              sphereRef={sphereRef} spotLightRef1={spotLightRef1} spotLightRef2={spotLightRef2}
+              pointLightRef1={pointLightRef1} pointLightRef2={pointLightRef2}
+            />
 
-        <MetallicRingModel
-  ringRef={ring3Ref}
-  modelPath="/model/ring.glb"
-  scale={[0, 0, 0]}
-  position={[0, -2, 0]}  
-  rotation={[degToRad(0), degToRad(-20), degToRad(-20)]}
-/>
+             
 
-<MetallicRingModel
-  ringRef={ring4Ref}
-  modelPath="/model/ring.glb"
-  scale={[0, 0, 0]}
-  position={[0, -2, 0]}  
-  rotation={[0, 0, degToRad(-20)]}
-/>
+            <SphereModel sphereRef={sphereRef} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" />
 
-        <CubeModel cubeRef={cubeRef} />
+            <AdditionalSphere sphereRef={additionalSphere1Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-4.8, 3, 5.9]} scale={0.7} isTransparent />
+            <AdditionalSphere sphereRef={additionalSphere2Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[3.5, 1.5, 10]} scale={1.2} isTransparent />
+            <AdditionalSphere sphereRef={additionalSphere3Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-9.2, -2, 2]} scale={0.6} isTransparent={false} />
+            <AdditionalSphere sphereRef={additionalSphere4Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[11, -5, -3]} scale={0.5} isTransparent={false} />
+            <AdditionalSphere sphereRef={additionalSphere5Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-5.2, 7, -1]} scale={0.7} isTransparent={false} />
 
-        {/* <Leva collapsed /> */}
+            <TransparentRingModel ringRef={ring1Ref} modelPath="/model/ring.glb" scale={[0.04, 0.015, 0.038]} position={[0, 0.3, -2]} rotation={[0, 0, 0]} />
+            <MetallicRingModel ringRef={ring2Ref} modelPath="/model/ring.glb" scale={[0.025, 0.015, 0.03]} position={[0.5, 0, 1]} rotation={[Math.PI / 2, 0, degToRad(50)]} />
+            <MetallicRingModel ringRef={ring3Ref} modelPath="/model/ring.glb" scale={[0, 0, 0]} position={[0, -2, 0]} rotation={[degToRad(0), degToRad(-20), degToRad(-20)]} />
+            <MetallicRingModel ringRef={ring4Ref} modelPath="/model/ring.glb" scale={[0, 0, 0]} position={[0, -2, 0]} rotation={[0, 0, degToRad(-20)]} />
 
-      </Suspense>
+              </ParallaxGroup>
 
-      <OrbitControls enableZoom={false} />
-    </Canvas>
-    </div>
-    {/* <Loader /> */}
-  </>
+            <CubeModel cubeRef={cubeRef} />
+
+            <OrbitControls enableZoom={false} />
+          </Suspense>
+        </Canvas>
+      </div>
+    </>
   );
 };
 
