@@ -7,7 +7,6 @@ import {
   Environment,
   MeshTransmissionMaterial,
 } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { Loader, useProgress } from "@react-three/drei";
 import { useControls } from 'leva';
 import React, { Suspense, useRef, useEffect, useMemo } from "react";
