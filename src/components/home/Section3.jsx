@@ -50,7 +50,7 @@ const SectionThree = () => {
 
   return (
     <section id='section-three' className="relative 
- gap-0 h-[200vh] flex items-center w-screen justify-center bg-white z-50">
+ gap-0 h-[200vh] flex items-center w-screen justify-center bg-white z-50 mt-[-0.4vw]">
 
       <div className="cube-container px-[3vw] w-full h-full bg-black [clip-path:polygon(90%_0,100%_5.5%,100%_100%,0_100%,0_0)]">
         <div className="flex flex-col mb-[2vw] gap-[1.5vw]">

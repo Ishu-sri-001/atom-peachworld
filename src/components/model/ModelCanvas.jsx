@@ -139,7 +139,8 @@ function CubeModel({ cubeRef }) {
     cubeRef.current.position.set(-5, 5, -1.5);
   }, []);
   return (
-    <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(63.2)]}>
+    //  <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(63.2)]}>
+     <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(58)]}>
       <boxGeometry args={[2, 2, 2]} />
       <meshStandardMaterial color="black" metalness={0.2} roughness={0.9} />
     </mesh>
@@ -220,7 +221,6 @@ const ModelCanvas = () => {
 
     if (!ready) return;
 
-
       const ctx = gsap.context(() => {
         if (!ring1Ref.current || !ring2Ref.current) {
           console.log("Refs not ready yet");
@@ -293,7 +293,7 @@ const ModelCanvas = () => {
         const tl3 = gsap.timeline({
           scrollTrigger: {
             trigger: "#section-two",
-            start: "top 67%",
+            start: "top 87%",
             scrub: true,
             // pin:true,
             end: "bottom top",
@@ -358,7 +358,7 @@ const ModelCanvas = () => {
       { y: -35 },   
       { 
         // delay:-1,
-        y: -1, 
+        y: -0.5, 
         ease: "none" ,
         scrollTrigger: {
           trigger:'#section-mid',
@@ -372,7 +372,7 @@ const ModelCanvas = () => {
 
     tt.to(sphereRef.current.position, {
       x: 30,
-      y:-15,
+      y:-18.3,
       // delay: 0.5,
       duration:2,
       ease:'none'
@@ -392,20 +392,19 @@ const ModelCanvas = () => {
       }
     })
 
-      const tl4 = gsap.timeline({
+      
+    gsap.to( cubeRef.current.position, {
+      y: 30,
+      delay:1.5,
+      ease:'none',
       scrollTrigger: {
         trigger: "#section-three",
-        start: "top bottom",   
-        end: "top top",        
+        start: "top 10%",   
+        end: "top -10%",        
         scrub: true,
         // pin: true,
         // markers: true,      
       },
-    })
-    tl4.to( cubeRef.current.position, {
-      y: 30,
-      delay:1.5,
-      ease:'none'
     })
 
     gsap.to(ring2Ref.current.position, {
@@ -452,7 +451,7 @@ const ModelCanvas = () => {
     ease: "none" }  
 )
 
-   tl5.to("#light-overlay", {
+   .to("#light-overlay", {
   opacity: 1,
   scale: 3,
   ease: "power2.inOut",
@@ -501,7 +500,7 @@ const ModelCanvas = () => {
       additionalSphere5Ref.current.position
     ] , {
       y: 20,
-      delay:0.5,
+      delay:1,
       duration:2,
     })
     .to (sphereRef.current.position, {
@@ -516,8 +515,7 @@ const ModelCanvas = () => {
       z:1.5,
       duration:0.01,
     }
-    )
-    
+    ) 
       .to(additionalSphere3Ref.current.position, {
         x:-35,
       },'<')
@@ -627,14 +625,19 @@ const ModelCanvas = () => {
   }, '<')
   .to(ring3Ref.current.position, {
     y:0,
-  },'<')
-  
+  },'<')  
 
   .to(ring4Ref.current.position, {
     x:0,
-    y:-6,
+    y:-4,
     z:2
   }, '<')
+  .to(ring4Ref.current.rotation, {
+    z:`+=${degToRad(-20)}`
+  },'<')
+  .to(ring4Ref.current.position, {
+    z:3.5,
+  },'<')
 
   .to(ring2Ref.current.rotation, {
       x:0,
