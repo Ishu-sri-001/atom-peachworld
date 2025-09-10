@@ -139,7 +139,7 @@ function CubeModel({ cubeRef }) {
   }, []);
   return (
     //  <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(63.2)]}>
-     <mesh ref={cubeRef} scale={[4, 39, 8.5]} rotation={[0, degToRad(-5), degToRad(59)]}>
+     <mesh ref={cubeRef} scale={[4, 40, 8.5]} rotation={[0, degToRad(-5), degToRad(62)]}>
       <boxGeometry args={[2, 2, 2]} />
       <meshStandardMaterial color="black" metalness={0.2} roughness={0.9} />
     </mesh>
@@ -285,7 +285,7 @@ const ModelCanvas = () => {
           .to(
             sphereRef.current.rotation,
             {
-              z: degToRad(360 * 1.5),
+              z: `+=${degToRad(360 * 1.5)}`,
               duration: 1,
               ease: "none",
             },
@@ -315,11 +315,11 @@ const ModelCanvas = () => {
           z: 1,
           ease: 'none'
         }, '<')
-        .to(pointLightRef1.current.position, {
-          z: 2.5,
-          x:0,
-          y:0
-        }, '<')
+        // .to(pointLightRef1.current.position, {
+        //   z: 2.5,
+        //   x:0,
+        //   y:0
+        // }, '<')
 
 
         gsap.to(sphereRef.current.rotation, {
@@ -366,17 +366,17 @@ const ModelCanvas = () => {
         ease: "none" ,
         scrollTrigger: {
           trigger:'#section-mid',
-          start: 'top 70%',
+          start: 'top 80%',
           end: '40% 60%',
           scrub:true,
-          // markers: true,
+          markers: false,
         }
       }
     )
 
     tt.to(sphereRef.current.position, {
       x: 24.5,
-      y:-15.3,
+      y:-12.8,
       // delay: 0.5,
       duration:5,
       ease:'none'

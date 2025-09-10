@@ -28,8 +28,8 @@ const MidSection = () => {
   }, []);
 
   return (
-    <section id="section-mid" className="z-20">
-      <div className="relative origin-top clipped-div h-[100vh] [clip-path:polygon(0_0,100%_110%,100%_100%,0_100%)] flex flex-col items-center justify-between">
+    <section id="section-mid" className="z-20 h-[100vh]">
+      <div className="relative origin-top clipped-div h-[100vh] [clip-path:polygon(0_0,100%_99%,100%_100%,0_100%)] flex flex-col items-center justify-between">
         <div className="h-full w-full bg-black"></div>
       </div>
     </section>
