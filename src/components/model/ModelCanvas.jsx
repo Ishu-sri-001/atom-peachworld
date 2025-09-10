@@ -263,7 +263,7 @@ const ModelCanvas = () => {
             start: "top top",
             end: "+=350",
             scrub: true,
-            // markers: true,
+            markers: false,
           },
         });
 
@@ -326,8 +326,8 @@ const ModelCanvas = () => {
   z: `+=${degToRad(360 * 20)}`, 
   ease: "none",
  scrollTrigger: {
-    trigger: "#section-two",
-    start: "top top",         
+    trigger: "#section-mid",
+    start: "top 5%",         
     endTrigger: "#section-six", 
     end: "bottom top ",
     scrub: true,
@@ -345,16 +345,7 @@ const ModelCanvas = () => {
       }
     })
 
-      const tt = gsap.timeline({
-          scrollTrigger: {
-          trigger:'#section-mid',
-          start: '40% 50%',
-          end: 'bottom 60%',
-          scrub:true,
-          markers: false,
-          pin: true,
-        }
-      })
+      
 
       gsap.fromTo(
       cubeRef.current.position,
@@ -373,6 +364,17 @@ const ModelCanvas = () => {
         }
       }
     )
+
+    const tt = gsap.timeline({
+          scrollTrigger: {
+          trigger:'#section-mid',
+          start: '40% 50%',
+          end: 'bottom 60%',
+          scrub:true,
+          markers: false,
+          pin: true,
+        }
+      })
 
     tt.to(sphereRef.current.position, {
       x: 24.5,
