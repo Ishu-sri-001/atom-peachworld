@@ -92,7 +92,7 @@ function AdditionalSphere({ position, scale, isTransparent, sphereRef, modelPath
     <mesh ref={sphereRef} geometry={sphereMesh.geometry} scale={scale} position={position} castShadow receiveShadow>
       {isTransparent ? (
         <meshPhysicalMaterial
-        transmission={1} roughness={0.4} thickness={0.4} ior={1.5} reflectivity={1.5}
+        transmission={1} roughness={0.25} thickness={0.4} ior={1.5} reflectivity={1.5}
          attenuationDistance={1.5} attenuationColor={"white"}
         iridescence={1.0} iridescenceIOR={1.3} iridescenceThicknessRange={[100, 400]}
       />
@@ -140,7 +140,7 @@ function CubeModel({ cubeRef }) {
   }, []);
   return (
     //  <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(63.2)]}>
-     <mesh ref={cubeRef} scale={[4, 39, 8.5]} rotation={[0, degToRad(-5), degToRad(58)]}>
+     <mesh ref={cubeRef} scale={[4, 39, 8.5]} rotation={[0, degToRad(-5), degToRad(59)]}>
       <boxGeometry args={[2, 2, 2]} />
       <meshStandardMaterial color="black" metalness={0.2} roughness={0.9} />
     </mesh>
@@ -170,12 +170,12 @@ function useParallaxMovement(groupRef) {
     groupRef.current.position.x = THREE.MathUtils.lerp(
       groupRef.current.position.x,
       -mouse.current.x * 1.1,
-      0.05
+      0.1
     );
     groupRef.current.position.y = THREE.MathUtils.lerp(
       groupRef.current.position.y,
       mouse.current.y * 1.1,
-      0.05
+      0.1
     );
     //  groupRef.current.position.x = -mouse.current.x * 2;
     // groupRef.current.position.y = mouse.current.y * 2;
@@ -188,7 +188,6 @@ function ParallaxGroup({ children }) {
   useParallaxMovement(groupRef);
   return <group ref={groupRef}>{children}</group>;
 }
-
 
 
 const ModelCanvas = () => {
@@ -207,6 +206,9 @@ const ModelCanvas = () => {
   const additionalSphere3Ref = useRef();
   const additionalSphere4Ref = useRef();
   const additionalSphere5Ref = useRef();
+
+  const bigSphere1Ref = useRef();
+  const bigSphere2Ref = useRef();
 
   const groupRef = useRef();
 
@@ -332,7 +334,7 @@ const ModelCanvas = () => {
     endTrigger: "#section-six", 
     end: "bottom top ",
     scrub: true,
-    // markers: true
+    markers: false
   },
 });
 
@@ -419,7 +421,6 @@ const ModelCanvas = () => {
         trigger: '#section-four'
       }
     })
-
     
     const tl5 =gsap.timeline({
       scrollTrigger: {
@@ -467,7 +468,6 @@ const ModelCanvas = () => {
     , '<' 
 )
 
-   
     .to(sphereRef.current.scale, {
       x: 3.3,
       y:3.3,
@@ -539,22 +539,12 @@ const ModelCanvas = () => {
       duration:0.01,
     }
     ) 
-      .to(additionalSphere3Ref.current.position, {
-        x:-35,
-      },'<')
-      .to(additionalSphere4Ref.current.position, {
-        x:40,
-      },'<')
-      .to(additionalSphere4Ref.current.position, {
-        y:-28,
-      })
       
     const sphereTimeline =gsap.timeline({
         scrollTrigger: {
         trigger:'#section-five',
         start: 'top bottom',
         end: 'bottom top',
-        // pin:true,
         scrub: true,
         // markers: true,
       }
@@ -668,8 +658,8 @@ const ModelCanvas = () => {
       z:0
   })
   .to(ring2Ref.current.position, {
-    y:17,
-    delay:0.2
+    y:18,
+    delay:0.3
   },'<')
 
   .to(ring3Ref.current.position, {
@@ -677,30 +667,30 @@ const ModelCanvas = () => {
     // delay:0.2
   },'<')
   .to(ring4Ref.current.position, {
-    y:17,
-    delay:0.1
+    y:18,
+    // delay:0.1
   },'<')
       });
   
 
-      gsap.to([additionalSphere3Ref.current.scale,
-      additionalSphere4Ref.current.scale], {
-        x:5,
-        y:5,
-        z:5,
-        duration:0.3,
-        scrollTrigger: {
-          trigger:'#section-six',
-          start: 'top bottom',
-          scrub:true,
-        }
-      })
+      // gsap.to([additionalSphere3Ref.current.scale,
+      // additionalSphere4Ref.current.scale], {
+      //   x:5,
+      //   y:5,
+      //   z:5,
+      //   duration:0.3,
+      //   scrollTrigger: {
+      //     trigger:'#section-six',
+      //     start: 'top bottom',
+      //     scrub:true,
+      //   }
+      // })
       gsap.to(sphereRef.current.rotation, {
         z: `+=${degToRad(360 * 10)}`, 
         ease: "none",
         scrollTrigger: {
           trigger: "#section-six",
-          start: "top bottom",         
+          start: "-45% bottom",         
           // endTrigger: "#section-six", 
           end: "bottom top ",
           scrub: true,
@@ -722,14 +712,14 @@ const ModelCanvas = () => {
         y:0,
         ease:'none'
       })
-      .to(additionalSphere3Ref.current.position, {
-        x:-13,
-        y:5,
+      .to(bigSphere1Ref.current.position, {
+        x:-10,
+        y:6,
         z:6,
       })
-      .to(additionalSphere4Ref.current.position, {
-        x:13,
-        y:-5,
+      .to(bigSphere2Ref.current.position, {
+        x:10,
+        y:-4,
         z:6,
       },'<')
 
@@ -777,7 +767,7 @@ const ModelCanvas = () => {
 
             <SphereModel sphereRef={sphereRef} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" />
 
-            <AdditionalSphere sphereRef={additionalSphere1Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-4.8, 3, 5.9]} scale={0.7} isTransparent />
+            <AdditionalSphere sphereRef={additionalSphere1Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-4.8, 3, 6.4]} scale={0.7} isTransparent />
             <AdditionalSphere sphereRef={additionalSphere2Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[3.5, 1.5, 10]} scale={1.2} isTransparent />
             <AdditionalSphere sphereRef={additionalSphere3Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-9.2, -2, 2]} scale={0.6} isTransparent={false} />
             <AdditionalSphere sphereRef={additionalSphere4Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[11, -5, -3]} scale={0.5} isTransparent={false} />
@@ -790,9 +780,27 @@ const ModelCanvas = () => {
 
             <CubeModel cubeRef={cubeRef} />
 
-              </ParallaxGroup>
+            <mesh ref={bigSphere1Ref} 
+            position={[-28, 18, 2]} 
+            scale={8}>
+            <sphereGeometry args={[1, 64, 64]} />
+            <meshStandardMaterial color="black" metalness={0.5} roughness={0.8} />
+          </mesh>
 
-            
+          <mesh 
+          ref={bigSphere2Ref} 
+          position={[30, -20, 2]} 
+          scale={8}>
+            <sphereGeometry args={[1, 64, 64]} />
+ 
+            <meshStandardMaterial
+        color="#411504" metalness={1.0} roughness={0.5} envMapIntensity={1.5}
+        clearcoat={1.0} clearcoatRoughness={0.0} sheen={1.0} sheenTint={0.5}
+        iridescence={1.0} iridescenceIOR={1.5} iridescenceThicknessRange={[200, 800]}
+      />
+          </mesh>
+
+              </ParallaxGroup>
 
             <OrbitControls enableZoom={false} />
           </Suspense>
