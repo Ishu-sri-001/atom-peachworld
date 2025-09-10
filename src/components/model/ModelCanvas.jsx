@@ -18,7 +18,6 @@ import Image from "next/image";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// --------- Helpers ----------
 function useModelsReady(dependencies) {
   const { progress } = useProgress();
   const [ready, setReady] = React.useState(false);
@@ -147,7 +146,6 @@ function CubeModel({ cubeRef }) {
   );
 }
 
-
 // Preload
 useGLTF.preload("/model/sphere.glb");
 useGLTF.preload("/model/ring.glb");
@@ -253,8 +251,7 @@ const ModelCanvas = () => {
             ease: "none",
             duration: 1,
           },
-          "<"
-          
+          "<"        
         )
         .to(ring2Ref.current.position, {
             x:`+=${0.8}`
