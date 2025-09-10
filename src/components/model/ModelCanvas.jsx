@@ -136,11 +136,11 @@ function MetallicRingModel({ modelPath, scale, position, rotation, ringRef }) {
 
 function CubeModel({ cubeRef }) {
   useEffect(() => {
-    cubeRef.current.position.set(-5, 5, -1.5);
+    cubeRef.current.position.set(-9, -20, -1.5);
   }, []);
   return (
     //  <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(63.2)]}>
-     <mesh ref={cubeRef} scale={[1.5, 33, 4]} rotation={[0, degToRad(-5), degToRad(58)]}>
+     <mesh ref={cubeRef} scale={[4, 39, 8.5]} rotation={[0, degToRad(-5), degToRad(58)]}>
       <boxGeometry args={[2, 2, 2]} />
       <meshStandardMaterial color="black" metalness={0.2} roughness={0.9} />
     </mesh>
@@ -247,12 +247,16 @@ const ModelCanvas = () => {
         }).to(
           ring2Ref.current.rotation,
           {
-            y: Math.PI * 1.5,
+            y: `+=${Math.PI * 1.5}`,
             ease: "none",
             duration: 1,
           },
           "<"
-        );
+          
+        )
+        .to(ring2Ref.current.position, {
+            x:`+=${0.8}`
+          }, '<');
 
         const tl2 = gsap.timeline({
           scrollTrigger: {
@@ -282,7 +286,7 @@ const ModelCanvas = () => {
           .to(
             sphereRef.current.rotation,
             {
-              z: degToRad(360 * 2),
+              z: degToRad(360 * 1.5),
               duration: 1,
               ease: "none",
             },
@@ -302,7 +306,7 @@ const ModelCanvas = () => {
         });
 
         tl3.to(sphereRef.current.rotation, {
-          z: `+=${degToRad(360 * 5)}`,
+          z: `+=${degToRad(360 * 4)}`,
           duration: 1,
           ease: "none",
         })
@@ -346,7 +350,7 @@ const ModelCanvas = () => {
           scrollTrigger: {
           trigger:'#section-mid',
           start: '40% 50%',
-          end: 'bottom top',
+          end: 'bottom 60%',
           scrub:true,
           markers: false,
           pin: true,
@@ -355,33 +359,35 @@ const ModelCanvas = () => {
 
       gsap.fromTo(
       cubeRef.current.position,
-      { y: -35 },   
+      { y: -43
+       },   
       { 
         // delay:-1,
-        y: -0.5, 
+        y: -2, 
         ease: "none" ,
         scrollTrigger: {
           trigger:'#section-mid',
-          start: '30% 60%',
+          start: 'top 70%',
           end: '40% 60%',
           scrub:true,
-          markers: false,
+          // markers: true,
         }
       }
     )
 
     tt.to(sphereRef.current.position, {
-      x: 30,
-      y:-18.3,
+      x: 24.5,
+      y:-15.3,
       // delay: 0.5,
-      duration:2,
+      duration:5,
       ease:'none'
-    }, '<' )
+    } )
     
     .to(sphereRef.current.position, {
       x: 0, 
     y: -30, 
-    delay:0.5,
+    duration:0.2,
+    // delay:0.5,
     ease: "ease" 
     })
 
@@ -393,8 +399,8 @@ const ModelCanvas = () => {
     })
 
       
-    gsap.to( cubeRef.current.position, {
-      y: 30,
+    gsap.to(cubeRef.current.position, {
+      y: 39,
       delay:1.5,
       ease:'none',
       scrollTrigger: {
@@ -419,7 +425,7 @@ const ModelCanvas = () => {
       scrollTrigger: {
         trigger: '#section-four',
         start: 'top top',
-        end: 'bottom top',
+        end: '+=2200',
         scrub:true,
         pin:true,
         // markers: true,
@@ -442,22 +448,26 @@ const ModelCanvas = () => {
       }
     })
 
-    tl5.to(
+    tl5
+    .to("#light-overlay", {
+  opacity: 1,
+  scale: 3,
+  ease: "none",
+  duration: 5,
+  transformOrigin: "center center"
+})
+    .to(
   sphereRef.current.position,
         {
     x: 0, 
     y: 0, 
-    // delay:0.5,
-    ease: "none" }  
+    // delay:0.2,
+    duration:5,
+    ease: "none" } 
+    , '<' 
 )
 
-   .to("#light-overlay", {
-  opacity: 1,
-  scale: 3,
-  ease: "power2.inOut",
-  duration: 2,
-  transformOrigin: "center center"
-}, "<")
+   
     .to(sphereRef.current.scale, {
       x: 3.3,
       y:3.3,
@@ -500,16 +510,29 @@ const ModelCanvas = () => {
       additionalSphere5Ref.current.position
     ] , {
       y: 20,
-      delay:1,
-      duration:2,
+      delay:2,
+      duration:5,
     })
     .to (sphereRef.current.position, {
       y:20,
       // delay:0.5,
-      duration:2,
+      duration:3,
     }, '<')
    
-    .to(sphereRef.current.scale, {
+    
+
+      const midd= gsap.timeline({
+        scrollTrigger: {
+          trigger: '#section-four',
+          start: () => tl5.scrollTrigger.end,
+          end: "+=1000",
+          scrub: true,
+          // markers: true,
+        }
+      })
+
+      midd
+      .to(sphereRef.current.scale, {
       x:1.5,
       y:1.5,
       z:1.5,
@@ -645,7 +668,7 @@ const ModelCanvas = () => {
       z:0
   })
   .to(ring2Ref.current.position, {
-    y:15,
+    y:17,
     delay:0.2
   },'<')
 
@@ -654,7 +677,7 @@ const ModelCanvas = () => {
     // delay:0.2
   },'<')
   .to(ring4Ref.current.position, {
-    y:15,
+    y:17,
     delay:0.1
   },'<')
       });
@@ -761,13 +784,15 @@ const ModelCanvas = () => {
             <AdditionalSphere sphereRef={additionalSphere5Ref} modelPath="/model/sphere.glb" texturePath="/assets/sphere-texture.webp" position={[-5.2, 7, -1]} scale={0.7} isTransparent={false} />
 
             <TransparentRingModel ringRef={ring1Ref} modelPath="/model/ring.glb" scale={[0.04, 0.015, 0.038]} position={[0, 0.3, -2]} rotation={[0, 0, 0]} />
-            <MetallicRingModel ringRef={ring2Ref} modelPath="/model/ring.glb" scale={[0.025, 0.015, 0.03]} position={[0.5, 0, 1]} rotation={[Math.PI / 2, 0, degToRad(50)]} />
+            <MetallicRingModel ringRef={ring2Ref} modelPath="/model/ring.glb" scale={[0.025, 0.015, 0.03]} position={[0.5, 0, 1]} rotation={[Math.PI / 2, 0, degToRad(40)]} />
             <MetallicRingModel ringRef={ring3Ref} modelPath="/model/ring.glb" scale={[0, 0, 0]} position={[0, -2, 0]} rotation={[degToRad(0), degToRad(-20), degToRad(-20)]} />
             <MetallicRingModel ringRef={ring4Ref} modelPath="/model/ring.glb" scale={[0, 0, 0]} position={[0, -2, 0]} rotation={[0, 0, degToRad(-20)]} />
 
+            <CubeModel cubeRef={cubeRef} />
+
               </ParallaxGroup>
 
-            <CubeModel cubeRef={cubeRef} />
+            
 
             <OrbitControls enableZoom={false} />
           </Suspense>

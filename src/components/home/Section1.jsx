@@ -51,41 +51,44 @@ const SectionOne = () => {
   }, []);
 
   return (
-    <section
-      id="section-one"
-      className="relative h-[120vh] w-full flex items-center justify-center overflow-hidden"
-    >
-      {/* oversized image wrapper */}
-      <div
-        ref={bgRef}
-        className="absolute left-[-2vw] top-[-2vw] will-change-transform"
-        style={{ width: "120%", height: "120%" }} 
-      >
-        <Image
-          src="/assets/bgImg.webp"
-          alt="bg-img"
-          fill
-          className="object-cover"
-          priority
-        />
-      </div>
+   <section
+  id="section-one"
+  className="relative h-[120vh] w-full flex items-center justify-center overflow-hidden"
+>
+  {/* oversized image wrapper */}
+  <div
+    ref={bgRef}
+    className="absolute left-[-2vw] top-[-2vw] will-change-transform "
+    style={{ width: "120%", height: "120%" }}
+  >
+    <Image
+      src="/assets/bgImg.webp"
+      alt="bg-img"
+      fill
+      className="object-cover"
+      priority
+    />
+    {/* gradient fade at the bottom */}
+    <div className="absolute bottom-0 left-0 w-full h-[120vh] bg-gradient-to-b from-transparent to-white pointer-events-none" />
+  </div>
 
-      {/* text content */}
-      <div className="absolute inset-0 py-[7vw] px-[3vw] z-10">
-        <p className="text-[3.5vw] one-text-one tracking-tighter font-medium w-[30%] leading-[1]">
-          We fund <span className="font-display">sci-fi</span> companies.
-        </p>
-      </div>
+  {/* text content */}
+  <div className="absolute inset-0 py-[7vw] px-[3vw] z-10">
+    <p className="text-[3.5vw] one-text-one tracking-tighter font-medium w-[30%] leading-[1]">
+      We fund <span className="font-display">sci-fi</span> companies.
+    </p>
+  </div>
 
-      <div className="absolute bottom-[12vw] right-10 z-10">
-        <p className="text-[3.5vw] tracking-tighter one-text-one font-medium flex flex-col w-full leading-[1]">
-          Baking pioneers{" "}
-          <span>
-            in <span className="font-display">future</span> tech.
-          </span>
-        </p>
-      </div>
-    </section>
+  <div className="absolute bottom-[12vw] right-10 z-10">
+    <p className="text-[3.5vw] tracking-tighter one-text-one font-medium flex flex-col w-full leading-[1]">
+      Baking pioneers{" "}
+      <span>
+        in <span className="font-display">future</span> tech.
+      </span>
+    </p>
+  </div>
+</section>
+
   );
 };
 
